@@ -12,29 +12,49 @@ import model.Utilisateur;
 import view.IVue;
 import view.VueLogin;
 
+/**
+ * Contrôleur dédié à la gestion de la connexion (Login).
+ * <p>
+ * Cette classe implémente l'interface {@code IControleur} et gère l'initialisation
+ * des composants de l'application pour le login. Elle configure par défaut les instances
+ * du modèle et des vues si aucune injection externe n'a été effectuée via
+ * {@link #setModelAndView(Modele, IVue, IVue)}.
+ * Après avoir chargé les données et configuré les abonnements, elle délègue la gestion
+ * des menus aux méthodes de {@link MainController}.
+ * </p>
+ *
+ * @version 1.0
+ */
+public class LoginController implements IControleur {
 
-public class LoginController implements IControleur{
-
-    // Références privées (injection via setModelAndView)
+    /** Instance du modèle utilisée par le contrôleur. */
     private Modele modele;
+    /** Vue destinée aux administrateurs. */
     private IVue vueAdmin;
+    /** Vue destinée aux annotateurs. */
     private IVue vueAnnot;
+    /** Scanner pour la saisie utilisateur. */
     private Scanner scanner = new Scanner(System.in);
+    /**
+     * Instance du MainController qui gère les menus principaux après le login.
+     */
     private MainController main;
 
-    // Chemins des fichiers CSV
+    /** Chemin vers le fichier CSV des utilisateurs. */
     private final String usersCsv = "resources/utilisateurs.csv";
+    /** Chemin vers le fichier CSV des textes. */
     private final String textesCsv = "resources/textes.csv";
+    /** Chemin vers le fichier CSV des annotations. */
     private final String annotationsCsv = "resources/annotations.csv";
+    /** Chemin vers le fichier CSV des collections. */
     private final String collectionsCsv = "resources/collections.csv";
-
 
     /**
      * Configure le contrôleur en liant le modèle et les vues.
      *
-     * @param modele   instance du modèle
-     * @param vueAdmin instance de la vue pour l'administrateur
-     * @param vueAnnot instance de la vue pour l'annotateur
+     * @param modele   l'instance du modèle (via l'interface {@link Modele})
+     * @param vueAdmin l'instance de la vue pour l'administrateur (via l'interface {@link IVue})
+     * @param vueAnnot l'instance de la vue pour l'annotateur (via l'interface {@link IVue})
      */
     @Override
     public void setModelAndView(Modele modele, IVue vueAdmin, IVue vueAnnot) {
@@ -44,9 +64,12 @@ public class LoginController implements IControleur{
     }
 
     /**
-     * Démarre l'application.
+     * Démarre l'application de login.
      * <p>
-     * Si la configuration n'a pas été injectée depuis l'extérieur, des instances par défaut sont créées.
+     * Si la configuration (modèle et vues) n'a pas été injectée, des instances par défaut
+     * sont créées. Ensuite, les données sont chargées et une instance de MainController est
+     * initialisée et configurée. Une boucle de connexion s'exécute pour authentifier l'utilisateur.
+     * Après déconnexion, les données sont sauvegardées.
      * </p>
      */
     @Override
@@ -62,7 +85,7 @@ public class LoginController implements IControleur{
         main = new MainController();
         main.setModelAndView(modele, vueAdmin, vueAnnot);
 
-        // 3) Boucle de connexion
+        // Boucle de connexion
         boolean run = true;
         while (run) {
             Utilisateur user = loginUser();
@@ -79,7 +102,7 @@ public class LoginController implements IControleur{
             }
         }
 
-        // 4) Sauvegarde des données CSV
+        // Sauvegarde des données CSV
         try {
             modele.saveAll(usersCsv, textesCsv, annotationsCsv, collectionsCsv);
         } catch (IOException e) {
@@ -90,9 +113,14 @@ public class LoginController implements IControleur{
     }
 
     /**
-     * Méthode privée pour gérer la connexion de l'utilisateur.
+     * Gère la connexion de l'utilisateur.
+     * <p>
+     * Affiche un menu de connexion et demande les identifiants.
+     * Si les informations sont correctes, retourne l'utilisateur correspondant ;
+     * sinon, affiche un message d'erreur et redemande la saisie.
+     * </p>
      *
-     * @return l'utilisateur connecté ou null en cas de déconnexion
+     * @return l'utilisateur connecté ou {@code null} en cas de déconnexion
      */
     private Utilisateur loginUser() {
         while (true) {
@@ -127,15 +155,21 @@ public class LoginController implements IControleur{
         }
     }
 
-    private void loadData(){
-        // 1) Chargement des données CSV
+    /**
+     * Charge les données depuis les fichiers CSV et configure les abonnements aux notifications.
+     * <p>
+     * Charge les utilisateurs, textes, annotations et collections depuis les fichiers CSV.
+     * Pour chaque texte chargé, la vue administrateur est abonnée pour recevoir des notifications.
+     * </p>
+     */
+    private void loadData() {
         try {
             modele.loadAll(usersCsv, textesCsv, annotationsCsv, collectionsCsv);
         } catch (IOException e) {
             System.err.println("Erreur chargement CSV: " + e.getMessage());
         }
 
-        // 2) Abonnement de la vue administrateur aux notifications des textes
+        // Abonnement de la vue administrateur aux notifications de chaque texte
         for (Texte t : modele.getTextesMap().values()) {
             t.ajouterObservateur((model.observer.Observateur) vueAdmin);
         }
