@@ -2,13 +2,12 @@ package model;
 
 /**
  * Classe représentant une annotation sur un texte.
- * <ul>
- *   <li>annotationId (ex: A1)</li>
- *   <li>texteId (ex: T2)</li>
- *   <li>auteurId (ex: user1)</li>
- *   <li>contenu (String)</li>
- *   <li>valide (boolean)</li>
- * </ul>
+ * <p>
+ * Une annotation possède un identifiant, l'identifiant du texte associé, l'identifiant de l'auteur,
+ * le contenu et un indicateur de validité.
+ * </p>
+ * 
+ * @version 1.0
  */
 public class Annotation {
     private String annotationId;
@@ -18,11 +17,12 @@ public class Annotation {
     private boolean valide;
 
     /**
-     * Constructeur
-     * @param annotationId ID unique (ex: "A1")
-     * @param texteId      ID du texte (ex: "T2")
-     * @param auteurId     ID de l'auteur annotateur
-     * @param contenu      Contenu de l'annotation
+     * Constructeur.
+     *
+     * @param annotationId identifiant unique (ex: "A1")
+     * @param texteId      identifiant du texte (ex: "T1")
+     * @param auteurId     identifiant de l'auteur
+     * @param contenu      contenu de l'annotation
      */
     public Annotation(String annotationId, String texteId, String auteurId, String contenu) {
         this.annotationId = annotationId;
@@ -32,23 +32,77 @@ public class Annotation {
         this.valide = false;
     }
 
-    public String getAnnotationId() { return annotationId; }
-    public String getTexteId()      { return texteId; }
-    public String getAuteurId()     { return auteurId; }
-    public String getContenu()      { return contenu; }
-    public boolean isValide()       { return valide; }
+    /**
+     * Retourne l'identifiant de l'annotation.
+     *
+     * @return l'identifiant
+     */
+    public String getAnnotationId() {
+        return annotationId;
+    }
 
-    public void setContenu(String c) { this.contenu = c; }
-    public void setValide(boolean v) { this.valide = v; }
+    /**
+     * Retourne l'identifiant du texte associé.
+     *
+     * @return l'identifiant du texte
+     */
+    public String getTexteId() {
+        return texteId;
+    }
+
+    /**
+     * Retourne l'identifiant de l'auteur.
+     *
+     * @return l'identifiant de l'auteur
+     */
+    public String getAuteurId() {
+        return auteurId;
+    }
+
+    /**
+     * Retourne le contenu de l'annotation.
+     *
+     * @return le contenu
+     */
+    public String getContenu() {
+        return contenu;
+    }
+
+    /**
+     * Indique si l'annotation est valide.
+     *
+     * @return true si valide, false sinon
+     */
+    public boolean isValide() {
+        return valide;
+    }
+
+    /**
+     * Met à jour le contenu de l'annotation.
+     *
+     * @param c nouveau contenu
+     */
+    public void setContenu(String c) {
+        this.contenu = c;
+    }
+
+    /**
+     * Définit la validité de l'annotation.
+     *
+     * @param v true si valide, false sinon
+     */
+    public void setValide(boolean v) {
+        this.valide = v;
+    }
 
     @Override
     public String toString() {
         return "Annotation{" +
-               "annotationId='" + annotationId + '\'' +
-               ", texteId='" + texteId + '\'' +
-               ", auteurId='" + auteurId + '\'' +
-               ", contenu='" + contenu + '\'' +
-               ", valide=" + valide +
-               '}';
+                "annotationId='" + annotationId + '\'' +
+                ", texteId='" + texteId + '\'' +
+                ", auteurId='" + auteurId + '\'' +
+                ", contenu='" + contenu + '\'' +
+                ", valide=" + valide +
+                '}';
     }
 }

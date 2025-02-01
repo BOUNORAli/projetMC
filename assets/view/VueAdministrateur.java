@@ -1,25 +1,47 @@
 package view;
 
-import model.observer.Observer;
 import model.Annotation;
 import model.Administrateur;
+import model.Utilisateur;
 import model.Texte;
-
 import java.util.List;
 import java.util.Scanner;
 
-public class VueAdministrateur implements Observer {
+/**
+ * Vue textuelle pour l'administrateur.
+ * <p>
+ * Implémente l'interface {@link IVue} et reçoit les notifications via le patron Observateur.
+ * </p>
+ * 
+ * @version 1.0
+ */
+public class VueAdministrateur implements IVue {
+
     private Scanner scanner;
 
+    /**
+     * Constructeur.
+     */
     public VueAdministrateur() {
         this.scanner = new Scanner(System.in);
     }
 
+    /**
+     * Méthode d'actualisation appelée lors de la notification du sujet.
+     *
+     * @param sujet   le sujet qui notifie
+     * @param message le message de notification
+     */
     @Override
-    public void update(Object observable, String message) {
+    public void actualiser(Object sujet, String message) {
+        // Vous pouvez ajouter ici une logique d'affichage ou de logging
+        System.out.println("[Notification Admin] " + message);
     }
 
-    public int menuPrincipal(Administrateur admin) {
+    @Override
+    public int menuPrincipal(Utilisateur utilisateur) {
+        // L'utilisateur est supposé être un administrateur.
+        Administrateur admin = (Administrateur) utilisateur;
         System.out.println("\n===== Menu Administrateur (" + admin.getNom() + ") =====");
         System.out.println("1) Choisir une collection");
         System.out.println("2) Créer une nouvelle collection");
@@ -28,12 +50,12 @@ public class VueAdministrateur implements Observer {
         return lireEntier();
     }
 
+    @Override
     public void afficherCollections(List<String> collections) {
         if (collections.isEmpty()) {
             System.out.println("Aucune collection disponible pour le moment.");
             return;
         }
-    
         System.out.println("\n----- LISTE DES COLLECTIONS -----");
         int index = 1;
         for (String colName : collections) {
@@ -42,34 +64,32 @@ public class VueAdministrateur implements Observer {
         }
         System.out.println("----------------------------------");
     }
-    
 
+    @Override
     public String demanderNomCollection() {
         System.out.println("Entrez le nom de la collection (0 pour annuler) : ");
         return scanner.nextLine();
     }
 
+    @Override
     public void afficherTextes(List<Texte> textes, String nomCollection) {
         if (textes.isEmpty()) {
             System.out.println("Aucun texte dans la collection « " + nomCollection + " ».");
             return;
         }
-    
         System.out.println("\n----- TEXTES DANS LA COLLECTION « " + nomCollection + " » -----");
         int index = 1;
         for (Texte t : textes) {
-            System.out.println(
-                "[" + index + "] ID=" + t.getId() +
-                " | Contenu : « " + t.getContenu() + " »" +
-                " | #" + t.getAnnotations().size() + " annotations"
-            );
+            System.out.println("[" + index + "] ID=" + t.getId() +
+                    " | Contenu : « " + t.getContenu() + " »" +
+                    " | #" + t.getAnnotations().size() + " annotations");
             index++;
         }
         System.out.println("--------------------------------------------------------------");
     }
-    
 
-    public int menuTextesAdmin() {
+    @Override
+    public int menuTextes() {
         System.out.println("\n[1] Valider une annotation");
         System.out.println("[2] Corriger une annotation");
         System.out.println("[3] Ajouter un texte");
@@ -78,17 +98,18 @@ public class VueAdministrateur implements Observer {
         return lireEntier();
     }
 
+    @Override
     public String demanderTexteId() {
         System.out.println("Entrez l'ID du texte (0 pour annuler): ");
         return scanner.nextLine();
     }
 
+    @Override
     public void afficherAnnotations(List<Annotation> annList) {
         if (annList.isEmpty()) {
             System.out.println("Aucune annotation.");
             return;
         }
-    
         System.out.println("\n----- LISTE DES ANNOTATIONS -----");
         int index = 1;
         for (Annotation ann : annList) {
@@ -98,27 +119,34 @@ public class VueAdministrateur implements Observer {
             System.out.println("  - Auteur       : " + ann.getAuteurId());
             System.out.println("  - Contenu      : " + ann.getContenu());
             System.out.println("  - Valide       : " + (ann.isValide() ? "Oui" : "Non"));
-            System.out.println(); // ligne vide
+            System.out.println();
             index++;
         }
     }
-    
 
+    @Override
     public String demanderAnnotationId() {
         System.out.println("Entrez l'ID de l'annotation (0 pour annuler): ");
         return scanner.nextLine();
     }
 
+    @Override
     public String demanderNouveauContenu() {
         System.out.println("Entrez le nouveau contenu (0 pour annuler): ");
         return scanner.nextLine();
     }
 
+    @Override
     public String demanderNouveauTexte() {
         System.out.println("Entrez le contenu du nouveau texte (0 pour annuler): ");
         return scanner.nextLine();
     }
 
+    /**
+     * Lit un entier saisi par l'utilisateur.
+     *
+     * @return l'entier saisi ou -1 en cas d'erreur
+     */
     private int lireEntier() {
         try {
             return Integer.parseInt(scanner.nextLine());

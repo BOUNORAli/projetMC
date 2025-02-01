@@ -1,117 +1,65 @@
 package controller;
 
 import model.*;
-import view.VueAnnotateur;
-import view.VueAdministrateur;
-
+import view.IVue;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
-public class MainController {
+/**
+ * Implémentation de l'interface {@link IControleur}.
+ * <p>
+ * Ce contrôleur ne communique avec le modèle et la vue que via les interfaces (Modele et IVue).
+ * La relation avec le modèle et la vue est définie dans l'interface IControleur via la méthode setModelAndView,
+ * ce qui permet de ne pas montrer de relation directe entre MainController et ces interfaces dans le diagramme UML.
+ * </p>
+ *
+ * @version 1.0
+ */
+public class MainController implements IControleur {
 
-    private Modele modele; // L'interface Modele
-    private VueAnnotateur vueAnnotateur;
-    private VueAdministrateur vueAdministrateur;
-
-    // CSV filenames
-    private String usersCsv       = "resources/utilisateurs.csv";
-    private String textesCsv      = "resources/textes.csv";
-    private String annotationsCsv = "resources/annotations.csv";
-    private String collectionsCsv = "resources/collections.csv";
-
+    // Références privées (injection via setModelAndView)
+    private Modele modele;
+    private IVue vueAdmin;
+    private IVue vueAnnot;
     private Scanner scanner = new Scanner(System.in);
 
+    /**
+     * Constructeur par défaut.
+     * <p>
+     * La configuration des dépendances se fera via {@link #setModelAndView(Modele, IVue, IVue)}.
+     * </p>
+     */
     public MainController() {
-        // On instancie l'implémentation
-        this.modele = new ModeleAnnotation();
-        this.vueAnnotateur = new VueAnnotateur();
-        this.vueAdministrateur = new VueAdministrateur();
+        // Aucun instanciation ici : on attend l'injection par setModelAndView.
     }
 
-    public void startApplication() {
-        // 1) Charger
-        try {
-            modele.loadAll(usersCsv, textesCsv, annotationsCsv, collectionsCsv);
-        } catch (IOException e) {
-            System.err.println("Erreur chargement CSV: " + e.getMessage());
-        }
-
-        // 2) Abonner la vue admin et la vue annotateur à chaque texte
-        for (Texte t : modele.getTextesMap().values()) {
-            t.addAdminObserver(vueAdministrateur);
-        }
-
-        // 3) Boucle de connexion
-        boolean run = true;
-        while (run) {
-            Utilisateur user = loginUser();
-            if (user == null) {
-                run = false;
-            } else {
-                if ("ADMIN".equalsIgnoreCase(user.getRole())) {
-                    runAdminMenu((Administrateur) user);
-                } else if ("ANNOTATEUR".equalsIgnoreCase(user.getRole())) {
-                    runAnnotateurMenu((Annotateur) user);
-                } else {
-                    System.err.println("Rôle inconnu: " + user.getRole());
-                }
-            }
-        }
-
-        // 4) Sauvegarde finale
-        try {
-            modele.saveAll(usersCsv, textesCsv, annotationsCsv, collectionsCsv);
-        } catch (IOException e) {
-            System.err.println("Erreur sauvegarde: " + e.getMessage());
-        }
-
-        System.out.println("Fermeture de l'application. Au revoir !");
+    /**
+     * Configure le contrôleur en liant le modèle et les vues.
+     *
+     * @param modele   instance du modèle
+     * @param vueAdmin instance de la vue pour l'administrateur
+     * @param vueAnnot instance de la vue pour l'annotateur
+     */
+    @Override
+    public void setModelAndView(Modele modele, IVue vueAdmin, IVue vueAnnot) {
+        this.modele = modele;
+        this.vueAdmin = vueAdmin;
+        this.vueAnnot = vueAnnot;
     }
 
-    private Utilisateur loginUser() {
-        while(true) {
-            System.out.println("\n=== Écran de connexion ===");
-            System.out.println("1) Se connecter");
-            System.out.println("0) Quitter");
-            System.out.print("Votre choix: ");
-            String c = scanner.nextLine();
-            switch(c) {
-                case "0":
-                    return null;
-                case "1":
-                    System.out.print("Entrez votre ID: ");
-                    String uid = scanner.nextLine();
-                    System.out.print("Entrez votre mot de passe: ");
-                    String mdp = scanner.nextLine();
-                    Utilisateur u = modele.getUtilisateursMap().get(uid);
-                    if(u == null) {
-                        System.err.println("Utilisateur inconnu.");
-                    } else {
-                        if(u.getMotDePasse().equals(mdp)) {
-                            System.out.println("Connexion réussie : " + u.getNom());
-                            return u;
-                        } else {
-                            System.err.println("Mot de passe incorrect.");
-                        }
-                    }
-                    break;
-                default:
-                    System.err.println("Choix invalide.");
-            }
-        }
-    }
+    
+    
 
-    // -------------------------------------------------
-    // MENU ADMIN
-    // -------------------------------------------------
-    private void runAdminMenu(Administrateur admin) {
+    // ------------- Menu Administrateur -------------
+
+    public void runAdminMenu(Administrateur admin) {
         boolean back = false;
         while (!back) {
-            int choice = vueAdministrateur.menuPrincipal(admin);
-            switch(choice) {
+            int choice = vueAdmin.menuPrincipal(admin);
+            switch (choice) {
                 case 0:
                     back = true;
                     break;
@@ -130,21 +78,22 @@ public class MainController {
     private void choisirCollectionAdmin(Administrateur admin) {
         Map<String, CollectionDeTextes> colMap = modele.getCollectionsMap();
         List<String> noms = new ArrayList<>(colMap.keySet());
-        vueAdministrateur.afficherCollections(noms);
+        vueAdmin.afficherCollections(noms);
 
-        String colName = vueAdministrateur.demanderNomCollection();
-        if("0".equals(colName)) return;
+        String colName = vueAdmin.demanderNomCollection();
+        if ("0".equals(colName))
+            return;
         CollectionDeTextes c = colMap.get(colName);
-        if(c == null) {
+        if (c == null) {
             System.err.println("Collection introuvable.");
             return;
         }
 
         boolean loop = true;
-        while(loop) {
-            vueAdministrateur.afficherTextes(c.getTextes(),c.getNom());
-            int sub = vueAdministrateur.menuTextesAdmin();
-            switch(sub) {
+        while (loop) {
+            vueAdmin.afficherTextes(c.getTextes(), c.getNom());
+            int sub = vueAdmin.menuTextes();
+            switch (sub) {
                 case 0:
                     loop = false;
                     break;
@@ -164,19 +113,21 @@ public class MainController {
     }
 
     private void validerAnnotation(Administrateur admin, CollectionDeTextes c) {
-        String tid = vueAdministrateur.demanderTexteId();
-        if("0".equals(tid)) return;
+        String tid = vueAdmin.demanderTexteId();
+        if ("0".equals(tid))
+            return;
         Texte t = modele.getTextesMap().get(tid);
-        if(t == null || !c.getTextes().contains(t)) {
+        if (t == null || !c.getTextes().contains(t)) {
             System.err.println("Texte introuvable dans cette collection.");
             return;
         }
         List<Annotation> annList = t.getAnnotations();
-        vueAdministrateur.afficherAnnotations(annList);
-        String annId = vueAdministrateur.demanderAnnotationId();
-        if("0".equals(annId)) return;
+        vueAdmin.afficherAnnotations(annList);
+        String annId = vueAdmin.demanderAnnotationId();
+        if ("0".equals(annId))
+            return;
         Annotation ann = modele.getAnnotationsMap().get(annId);
-        if(ann == null || !ann.getTexteId().equals(tid)) {
+        if (ann == null || !ann.getTexteId().equals(tid)) {
             System.err.println("Annotation introuvable pour ce texte.");
             return;
         }
@@ -185,45 +136,48 @@ public class MainController {
     }
 
     private void corrigerAnnotation(Administrateur admin, CollectionDeTextes c) {
-        String tid = vueAdministrateur.demanderTexteId();
-        if("0".equals(tid)) return;
+        String tid = vueAdmin.demanderTexteId();
+        if ("0".equals(tid))
+            return;
         Texte t = modele.getTextesMap().get(tid);
-        if(t == null || !c.getTextes().contains(t)) {
+        if (t == null || !c.getTextes().contains(t)) {
             System.err.println("Texte introuvable dans la collection.");
             return;
         }
         List<Annotation> annList = t.getAnnotations();
-        vueAdministrateur.afficherAnnotations(annList);
-        String annId = vueAdministrateur.demanderAnnotationId();
-        if("0".equals(annId)) return;
+        vueAdmin.afficherAnnotations(annList);
+        String annId = vueAdmin.demanderAnnotationId();
+        if ("0".equals(annId))
+            return;
         Annotation ann = modele.getAnnotationsMap().get(annId);
-        if(ann == null || !ann.getTexteId().equals(tid)) {
+        if (ann == null || !ann.getTexteId().equals(tid)) {
             System.err.println("Annotation introuvable pour ce texte.");
             return;
         }
-        String newCont = vueAdministrateur.demanderNouveauContenu();
-        if("0".equals(newCont)) return;
+        String newCont = vueAdmin.demanderNouveauContenu();
+        if ("0".equals(newCont))
+            return;
         admin.corrigerAnnotation(t, ann, newCont);
         System.out.println("Annotation corrigée et validée.");
     }
 
     private void ajouterTexteAdmin(CollectionDeTextes c) {
-        String cont = vueAdministrateur.demanderNouveauTexte();
-        if("0".equals(cont)) return;
+        String cont = vueAdmin.demanderNouveauTexte();
+        if ("0".equals(cont))
+            return;
         String tId = modele.generateTexteId();
         Texte t = new Texte(tId, cont);
-        // On abonne pour voir (admin, annot)
-        t.addAdminObserver(vueAdministrateur);
-
+        t.ajouterObservateur((model.observer.Observateur) vueAdmin);
         c.ajouterTexte(t);
         modele.addTexte(t);
         System.out.println("Texte " + tId + " ajouté à la collection " + c.getNom());
     }
 
     private void creerNouvelleCollection() {
-        String colName = vueAdministrateur.demanderNomCollection();
-        if("0".equals(colName)) return;
-        if(modele.getCollectionsMap().containsKey(colName)) {
+        String colName = vueAdmin.demanderNomCollection();
+        if ("0".equals(colName))
+            return;
+        if (modele.getCollectionsMap().containsKey(colName)) {
             System.err.println("Cette collection existe déjà.");
             return;
         }
@@ -232,14 +186,13 @@ public class MainController {
         System.out.println("Collection créée: " + colName);
     }
 
-    // -------------------------------------------------
-    //   MENU ANNOTATEUR
-    // -------------------------------------------------
-    private void runAnnotateurMenu(Annotateur annot) {
+    // ------------- Menu Annotateur -------------
+
+    public void runAnnotateurMenu(Annotateur annot) {
         boolean back = false;
-        while(!back) {
-            int c = vueAnnotateur.menuPrincipal(annot);
-            switch(c) {
+        while (!back) {
+            int c = vueAnnot.menuPrincipal(annot);
+            switch (c) {
                 case 0:
                     back = true;
                     break;
@@ -261,21 +214,22 @@ public class MainController {
     private void choisirCollectionAnnot(Annotateur annot) {
         Map<String, CollectionDeTextes> colMap = modele.getCollectionsMap();
         List<String> noms = new ArrayList<>(colMap.keySet());
-        vueAnnotateur.afficherCollections(noms);
+        vueAnnot.afficherCollections(noms);
 
-        String colName = vueAnnotateur.demanderNomCollection();
-        if("0".equals(colName)) return;
+        String colName = vueAnnot.demanderNomCollection();
+        if ("0".equals(colName))
+            return;
         CollectionDeTextes c = colMap.get(colName);
-        if(c == null) {
+        if (c == null) {
             System.err.println("Collection introuvable.");
             return;
         }
 
         boolean loop = true;
-        while(loop) {
-            vueAnnotateur.afficherTextes(c.getTextes(),c.getNom());
-            int sub = vueAnnotateur.menuTextesAnnot();
-            switch(sub) {
+        while (loop) {
+            vueAnnot.afficherTextes(c.getTextes(), c.getNom());
+            int sub = vueAnnot.menuTextes();
+            switch (sub) {
                 case 0:
                     loop = false;
                     break;
@@ -295,15 +249,22 @@ public class MainController {
     }
 
     private void annoterTexte(Annotateur annot, CollectionDeTextes c) {
-        String tid = vueAnnotateur.demanderTexteId();
-        if("0".equals(tid)) return;
+        String tid = vueAnnot.demanderTexteId();
+        if ("0".equals(tid))
+            return;
         Texte t = modele.getTextesMap().get(tid);
-        if(t == null || !c.getTextes().contains(t)) {
+        if (t == null || !c.getTextes().contains(t)) {
             System.err.println("Texte introuvable dans cette collection.");
             return;
         }
-        String contenu = vueAnnotateur.demanderContenuAnnotation();
-        if("0".equals(contenu)) return;
+        String contenu = "";
+        if (vueAnnot instanceof view.VueAnnotateur) {
+            contenu = ((view.VueAnnotateur) vueAnnot).demanderContenuAnnotation();
+        } else {
+            contenu = vueAnnot.demanderNouveauTexte();
+        }
+        if ("0".equals(contenu))
+            return;
         String annId = modele.generateAnnotationId();
         Annotation ann = annot.annoterTexte(t, annId, contenu);
         modele.addAnnotation(ann);
@@ -311,47 +272,48 @@ public class MainController {
     }
 
     private void modifierMonAnnotation(Annotateur annot, CollectionDeTextes c) {
-        String tid = vueAnnotateur.demanderTexteId();
-        if("0".equals(tid)) return;
+        String tid = vueAnnot.demanderTexteId();
+        if ("0".equals(tid))
+            return;
         Texte t = modele.getTextesMap().get(tid);
-        if(t == null || !c.getTextes().contains(t)) {
+        if (t == null || !c.getTextes().contains(t)) {
             System.err.println("Texte introuvable dans la collection.");
             return;
         }
         List<Annotation> annList = t.getAnnotations();
-        if(annList.isEmpty()) {
+        if (annList.isEmpty()) {
             System.err.println("Aucune annotation sur ce texte.");
             return;
         }
         for (Annotation a : annList) {
             System.out.println(a);
         }
-        String annId = vueAnnotateur.demanderAnnotationId();
-        if("0".equals(annId)) return;
+        String annId = vueAnnot.demanderAnnotationId();
+        if ("0".equals(annId))
+            return;
         Annotation a = modele.getAnnotationsMap().get(annId);
-        if(a == null) {
+        if (a == null) {
             System.err.println("Annotation introuvable.");
             return;
         }
-        if(!a.getAuteurId().equals(annot.getId())) {
+        if (!a.getAuteurId().equals(annot.getId())) {
             System.err.println("Cette annotation n'est pas la vôtre !");
             return;
         }
-        String newCont = vueAnnotateur.demanderNouveauContenu();
-        if("0".equals(newCont)) return;
+        String newCont = vueAnnot.demanderNouveauContenu();
+        if ("0".equals(newCont))
+            return;
         annot.modifierAnnotation(a, newCont);
         System.out.println("Annotation modifiée (non valide).");
     }
 
     private void ajouterTexteAnnot(Annotateur annot, CollectionDeTextes c) {
-        String contenu = vueAnnotateur.demanderNouveauTexte();
-        if("0".equals(contenu)) return;
+        String contenu = vueAnnot.demanderNouveauTexte();
+        if ("0".equals(contenu))
+            return;
         String tId = modele.generateTexteId();
         Texte t = new Texte(tId, contenu);
-
-        // Abonnements
-        t.addAdminObserver(vueAdministrateur);
-
+        t.ajouterObservateur((model.observer.Observateur) vueAdmin);
         c.ajouterTexte(t);
         modele.addTexte(t);
         System.out.println("Texte " + tId + " ajouté dans la collection " + c.getNom());
@@ -364,13 +326,14 @@ public class MainController {
                 list.add(a);
             }
         }
-        vueAnnotateur.afficherMesAnnotations(list);
+        vueAnnot.afficherAnnotations(list);
     }
 
     private void creerNouvelleCollectionAnnot() {
-        String colName = vueAnnotateur.demanderNomCollection();
-        if("0".equals(colName)) return;
-        if(modele.getCollectionsMap().containsKey(colName)) {
+        String colName = vueAnnot.demanderNomCollection();
+        if ("0".equals(colName))
+            return;
+        if (modele.getCollectionsMap().containsKey(colName)) {
             System.err.println("Cette collection existe déjà.");
             return;
         }

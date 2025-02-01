@@ -1,30 +1,29 @@
 package model;
 
 /**
- * Classe abstraite représentant un Utilisateur du système.
- * Un utilisateur possède :
- * <ul>
- *   <li>un identifiant (String)</li>
- *   <li>un nom</li>
- *   <li>un email</li>
- *   <li>un rôle : "ADMIN" ou "ANNOTATEUR"</li>
- *   <li>un mot de passe</li>
- * </ul>
+ * Classe abstraite représentant un utilisateur.
+ * <p>
+ * Un utilisateur possède un identifiant, un nom, un email, un rôle et un mot de passe.
+ * </p>
+ * 
+ * @author 
+ * @version 1.0
  */
 public abstract class Utilisateur {
     protected String id;
     protected String nom;
     protected String email;
-    protected String role;       // "ADMIN" ou "ANNOTATEUR"
-    protected String motDePasse; // stocké en clair
+    protected String role;
+    protected String motDePasse;
 
     /**
-     * Constructeur de l'utilisateur
-     * @param id        identifiant (ex: "user1")
-     * @param nom       nom (ex: "Alice")
-     * @param email     email
-     * @param role      "ADMIN" ou "ANNOTATEUR"
-     * @param motDePasse mot de passe
+     * Constructeur.
+     *
+     * @param id         identifiant de l'utilisateur
+     * @param nom        nom de l'utilisateur
+     * @param email      email de l'utilisateur
+     * @param role       rôle ("ADMIN" ou "ANNOTATEUR")
+     * @param motDePasse mot de passe de l'utilisateur
      */
     public Utilisateur(String id, String nom, String email, String role, String motDePasse) {
         this.id = id;
@@ -34,18 +33,57 @@ public abstract class Utilisateur {
         this.motDePasse = motDePasse;
     }
 
-    public String getId()         { return id; }
-    public String getNom()        { return nom; }
-    public String getEmail()      { return email; }
-    public String getRole()       { return role; }
-    public String getMotDePasse() { return motDePasse; }
+    /**
+     * Retourne l'identifiant.
+     *
+     * @return l'identifiant
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Retourne le nom.
+     *
+     * @return le nom
+     */
+    public String getNom() {
+        return nom;
+    }
+
+    /**
+     * Retourne l'email.
+     *
+     * @return l'email
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * Retourne le rôle.
+     *
+     * @return le rôle
+     */
+    public String getRole() {
+        return role;
+    }
+
+    /**
+     * Retourne le mot de passe.
+     *
+     * @return le mot de passe
+     */
+    public String getMotDePasse() {
+        return motDePasse;
+    }
 
     @Override
     public String toString() {
         return role + "{" +
-               "id='" + id + '\'' +
-               ", nom='" + nom + '\'' +
-               ", email='" + email + '\'' +
-               '}';
+                "id='" + id + '\'' +
+                ", nom='" + nom + '\'' +
+                ", email='" + email + '\'' +
+                '}';
     }
 }

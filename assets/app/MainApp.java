@@ -1,20 +1,28 @@
 package app;
 
+import controller.IControleur;
+import controller.LoginController;
 import controller.MainController;
 
 /**
- * Classe principale contenant la méthode main().
+ * La classe principale contenant la méthode main().
  * <p>
- * Lance le MainController et démarre l'application.
+ * Elle instancie le contrôleur via l'interface {@link IControleur} et démarre l'application.
+ * </p>
+ *
+ * @version 1.0
  */
 public class MainApp {
 
     /**
      * Point d'entrée de l'application.
-     * @param args arguments de la ligne de commande (non utilisés)
+     *
+     * @param args les arguments de la ligne de commande (non utilisés)
      */
-    public static void main(String[] args) {
-        MainController controller = new MainController();
+
+    // new login controller
+    public static void main(String[] args) throws Exception {
+        IControleur controller = new LoginController();
         controller.startApplication();
     }
 }
