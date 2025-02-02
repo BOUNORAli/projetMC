@@ -28,6 +28,6 @@ public interface IControleur {
      * Démarre l'application.
      */
     default void startApplication() throws Exception{
-        throw new Exception("Il faut pas utiliser cette fonction ici.");
+        throw new Exception("Il ne faut pas utiliser cette fonction ici.");
     }
 }

@@ -2,12 +2,9 @@ package controller;
 
 import model.*;
 import view.IVue;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-
 /**
  * Implémentation de l'interface {@link IControleur}.
  * <p>
@@ -24,7 +21,6 @@ public class MainController implements IControleur {
     private Modele modele;
     private IVue vueAdmin;
     private IVue vueAnnot;
-    private Scanner scanner = new Scanner(System.in);
 
     /**
      * Constructeur par défaut.
